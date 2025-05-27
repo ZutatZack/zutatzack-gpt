@@ -13,7 +13,7 @@ Füge eine kurze Aha-Info aus Omas Küche oder einer anderen Kultur hinzu.`;
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearersk-proj-OuMnmarcQwbRbVGZo7NCJC8gFR9jhAByqRrZnO8P80Wlr2Sn-JPlHyBPianBdW8rWvXqAjG2TZT3BlbkFJFcvWDpK32c23dVpVPXbQXsfKZqkscKsSBP6_XBkEg07_lNS4IaDC7I-1PrwL1eRL1NtBSGc5sA
       },
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
