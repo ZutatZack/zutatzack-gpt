@@ -6,8 +6,8 @@
   <style>
     body { font-family: sans-serif; background: #fffbe6; padding: 2rem; max-width: 600px; margin: auto; }
     h1 { color: #cb4b16; }
-    input, button { padding: 0.5rem; font-size: 1rem; margin-top: 1rem; width: 100%; }
-    .recipe { margin-top: 2rem; background: #fdf6e3; padding: 1rem; border: 1px dashed #ccc; }
+    input, button { padding: 0.5rem; font-size: 1rem; margin-top: 1rem; width: 100%; box-sizing: border-box; }
+    .recipe { background: #fdf6e3; padding: 1rem; margin-top: 2rem; border: 1px dashed #ccc; }
   </style>
 </head>
 <body>
@@ -21,6 +21,7 @@
   <script>
     async function sendeAnfrage() {
       const zutaten = document.getElementById('zutaten').value;
+
       const response = await fetch('/api/generate-recipe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,8 +30,14 @@
 
       const data = await response.json();
       const rezeptBox = document.getElementById('rezept');
-      rezeptBox.innerText = data.recipe;
-      rezeptBox.style.display = 'block';
+
+      if (data.recipe) {
+        rezeptBox.innerText = data.recipe;
+        rezeptBox.style.display = 'block';
+      } else {
+        rezeptBox.innerText = 'Fehler: ' + (data.message || 'Unbekannter Fehler');
+        rezeptBox.style.display = 'block';
+      }
     }
   </script>
 </body>
