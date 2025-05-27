@@ -5,7 +5,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ message: 'No ingredients provided' });
   }
 
-  const prompt = `Erstelle ein gesundes, kreatives Rezept mit diesen Zutaten: ${ingredients}.
+ const prompt = `Erfinde ein einfaches, leckeres Rezept auf Basis dieser Zutaten: ${ingredients}. Wenn sie ungewöhnlich kombiniert sind, sei kreativ! Nenne das Rezept, beschreibe es in 2–3 Sätzen und gib zum Schluss eine überraschende Aha-Info oder Küchenweisheit.`;
+
 Füge am Ende eine kurze Aha-Info hinzu – z. B. aus Omas Küche oder einer Kulturtradition.`;
 
   try {
