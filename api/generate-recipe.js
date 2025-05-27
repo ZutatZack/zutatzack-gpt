@@ -1,56 +1,37 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>ZutatZack – KI-Rezeptgenerator</title>
-  <style>
-    body { font-family: sans-serif; background: #fffbe6; padding: 2rem; max-width: 600px; margin: auto; }
-    h1 { color: #cb4016; }
-    input, button { padding: 0.5rem; font-size: 1rem; margin-top: 1rem; width: 100%; }
-    .recipe { margin-top: 2rem; background: #fdf6e3; padding: 1rem; border: 1px dashed #ccc; }
-  </style>
-</head>
-<body>
-  <h1>ZutatZack – Mit KI kochen!</h1>
-  <p>Gib 2–3 Zutaten ein:</p>
-  <input type="text" id="zutaten" placeholder="z.B. Reis, Tomate, Zimt">
-  <button onclick="sendeAnfrage()">Zack – Rezept her!</button>
+export default async function handler(req, res) {
+  const { ingredients } = req.body;
 
-  <div id="rezept" class="recipe" style="display:none;"></div>
+  if (!ingredients) {
+    return res.status(400).json({ message: 'No ingredients provided' });
+  }
 
-  <script>
-    async function sendeAnfrage() {
-      const rezeptBox = document.getElementById('rezept');
-      rezeptBox.style.display = 'none'; // reset Anzeige
-      rezeptBox.innerText = ''; // reset Text
+  const prompt = `Erstelle ein gesundes, kreatives Rezept mit diesen Zutaten: ${ingredients}.
+Füge am Ende eine kurze Aha-Info hinzu – z. B. aus Omas Küche oder einer Kulturtradition.`;
 
-      const zutaten = document.getElementById('zutaten').value;
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` // 🔐
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.8
+      })
+    });
 
-      try {
-        const response = await fetch('/api/generate-recipe', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ ingredients: zutaten })
-        });
+    const data = await response.json();
 
-        const data = await response.json();
-
-        if (data.recipe) {
-          rezeptBox.innerText = data.recipe;
-        } else {
-          rezeptBox.innerText = 'Fehler: ' + (data.message || 'Unbekannter Fehler');
-        }
-
-        rezeptBox.style.display = 'block';
-
-      } catch (error) {
-        rezeptBox.innerText = 'Netzwerkfehler oder keine Antwort von GPT.';
-        rezeptBox.style.display = 'block';
-        console.error('Fehler:', error);
-      }
+    if (!data.choices || !data.choices[0]) {
+      return res.status(500).json({ message: 'GPT returned no choices' });
     }
-  </script>
-</body>
-</html>
+
+    res.status(200).json({ recipe: data.choices[0].message.content });
+
+  } catch (error) {
+    console.error('GPT API error:', error);
+    res.status(500).json({ message: 'No response from GPT' });
+  }
+}
