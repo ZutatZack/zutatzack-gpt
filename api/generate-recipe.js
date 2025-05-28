@@ -1,48 +1,79 @@
-// /api/generate-recipe.js
-
-export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  const zutaten = req.body;
-
-  if (!zutaten || zutaten.trim() === "") {
-    return res.status(400).json({ error: "Keine Zutaten angegeben." });
-  }
-
-  try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json"
-        // "OpenAI-Organization": "org-..." // <– falls du eine ORG-ID hast, sonst diese Zeile weglassen
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "user",
-            content: `Gib mir ein schnelles, kreatives Rezept mit diesen Zutaten: ${zutaten}. Bitte in einem Satz + Aha-Fact, z. B. kultureller Ursprung oder Nährwert.`
-          }
-        ],
-        temperature: 0.7
-      })
-    });
-
-    const data = await openaiRes.json();
-
-    if (!data.choices || data.choices.length === 0) {
-      return res.status(500).json({ error: "GPT returned no choices" });
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZutatZack – Mit KI kochen!</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #fffbe6;
+      padding: 2rem;
+      color: #333;
     }
 
-    res.status(200).json({ recipe: data.choices[0].message.content });
+    .recipe {
+      margin-top: 2rem;
+      border: 1px dashed #ccc;
+      padding: 1rem;
+      background: #fff;
+    }
 
-  } catch (error) {
-    console.error("GPT API error:", error);
-    res.status(500).json({ error: "No response from GPT" });
-  }
-}
+    input {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      padding: 1rem;
+      font-size: 1rem;
+      background: #eee;
+      border: 1px solid #ccc;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>ZutatZack – Mit KI kochen!</h1>
+  <p>Gib 2–3 Zutaten ein:</p>
+  <input id="zutaten" type="text" placeholder="z. B. Reis, Tomate, Zimt" />
+  <button onclick="sendeAnfrage()">Zack – Rezept her!</button>
+  <div id="rezept" class="recipe" style="display: none;"></div>
+
+  <script>
+    async function sendeAnfrage() {
+      const zutaten = document.getElementById('zutaten').value;
+
+      const rezeptBox = document.getElementById('rezept');
+      rezeptBox.style.display = 'block';
+      rezeptBox.innerText = 'Bitte warten …';
+
+      try {
+        const response = await fetch('/api/generate-recipe', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ zutaten })
+        });
+
+        const data = await response.json();
+
+        if (data.recipe) {
+          rezeptBox.innerText = data.recipe;
+        } else {
+          rezeptBox.innerText = 'Fehler: ' + (data.error || 'Keine Antwort erhalten');
+        }
+      } catch (error) {
+        rezeptBox.innerText = 'Fehler beim Abrufen: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>
 
 
