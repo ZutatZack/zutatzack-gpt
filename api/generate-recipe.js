@@ -1,11 +1,11 @@
-
 // /api/generate-recipe.js
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { zutaten } = req.body;
+  const zutaten = req.body;
 
   if (!zutaten || zutaten.trim() === "") {
     return res.status(400).json({ error: "Keine Zutaten angegeben." });
@@ -17,14 +17,14 @@ export default async function handler(req, res) {
       headers: {
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
         "Content-Type": "application/json"
+        // "OpenAI-Organization": "org-..." // <– falls du eine ORG-ID hast, sonst diese Zeile weglassen
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
         messages: [
           {
             role: "user",
-            content: `Gib mir ein schnelles, kreatives Rezept mit diesen Zutaten: ${zutaten}. 
-                      Bitte in einem Satz + Aha-Fact, z. B. kultureller Ursprung oder Nährwert.`
+            content: `Gib mir ein schnelles, kreatives Rezept mit diesen Zutaten: ${zutaten}. Bitte in einem Satz + Aha-Fact, z. B. kultureller Ursprung oder Nährwert.`
           }
         ],
         temperature: 0.7
@@ -37,11 +37,11 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: "GPT returned no choices" });
     }
 
-    const antwort = data.choices[0].message.content;
+    res.status(200).json({ recipe: data.choices[0].message.content });
 
-    return res.status(200).json({ rezept: antwort });
   } catch (error) {
-    return res.status(500).json({ error: "Fehler bei der Anfrage", details: error.message });
+    console.error("GPT API error:", error);
+    res.status(500).json({ error: "No response from GPT" });
   }
 }
 
